@@ -31,7 +31,7 @@ client = NacosClient(...)
 # publish config
 client.config.publish("test_config", "DEFAULT_GROUP", "test_value")
 # get config
-assert client.config.get("test_config", "DEFAULT_GROUP") == "test_value"
+assert client.config.get("test_config", "DEFAULT_GROUP", "namespaceId") == "test_value"
 
 
 # subscribe config
@@ -43,6 +43,7 @@ def config_update(config):
 client.config.subscribe(
     "test_config",
     "DEFAULT_GROUP",
+    "namespaceId",
     callback=config_update
 )
 ```

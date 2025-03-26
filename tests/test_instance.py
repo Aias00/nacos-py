@@ -3,9 +3,9 @@ import time
 
 import pytest
 
-from use_nacos.client import NacosClient
-from use_nacos.endpoints import InstanceEndpoint
-from use_nacos.exception import HTTPResponseError
+from nacos_py_client.client import NacosClient
+from nacos_py_client.endpoints import InstanceEndpoint
+from nacos_py_client.exception import HTTPResponseError
 
 server_addr = os.environ.get('SERVER_ADDR')
 

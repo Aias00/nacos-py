@@ -1,14 +1,14 @@
-# use-nacos
+# nacos-py-client
 
-<a href="https://github.com/use-py/use-nacos/actions/workflows/test.yml?query=event%3Apush+branch%3Amain" target="_blank">
-    <img src="https://github.com/use-py/use-nacos/actions/workflows/test.yml/badge.svg?branch=main&event=push" alt="Test">
+<a href="https://github.com/Aias00/nacos-py/actions/workflows/test.yml?query=event%3Apush+branch%3Amain" target="_blank">
+    <img src="https://github.com/Aias00/nacos-py/actions/workflows/test.yml/badge.svg?branch=main&event=push" alt="Test">
 </a>
-<a href="https://pypi.org/project/use-nacos" target="_blank">
-    <img src="https://img.shields.io/pypi/v/use-nacos.svg" alt="Package version">
+<a href="https://pypi.org/project/nacos-py-client" target="_blank">
+    <img src="https://img.shields.io/pypi/v/nacos-py-client.svg" alt="Package version">
 </a>
 
-<a href="https://pypi.org/project/use-nacos" target="_blank">
-    <img src="https://img.shields.io/pypi/pyversions/use-nacos.svg" alt="Supported Python versions">
+<a href="https://pypi.org/project/nacos-py-client" target="_blank">
+    <img src="https://img.shields.io/pypi/pyversions/nacos-py-client.svg" alt="Supported Python versions">
 </a>
 
 A python nacos client based on the official [open-api](https://nacos.io/zh-cn/docs/open-api.html).
@@ -16,7 +16,7 @@ A python nacos client based on the official [open-api](https://nacos.io/zh-cn/do
 ## install
 
 ```shell
-pip install use-nacos
+pip install nacos-py-client
 ```
 
 ## usage
@@ -24,7 +24,7 @@ pip install use-nacos
 ### config
 
 ```python
-from use_nacos import NacosClient
+from nacos_py_client import NacosClient
 
 client = NacosClient(...)
 
@@ -50,7 +50,7 @@ client.config.subscribe(
 ### instance
 
 ```python
-from use_nacos import NacosClient
+from nacos_py_client import NacosClient
 
 nacos = NacosClient()
 
@@ -78,7 +78,7 @@ from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI
 
-from use_nacos import NacosAsyncClient
+from nacos_py_client import NacosAsyncClient
 
 
 def config_update(config):

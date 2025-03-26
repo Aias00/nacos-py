@@ -5,11 +5,11 @@ import time
 import httpx
 import pytest
 
-from use_nacos.cache import MemoryCache
-from use_nacos.client import NacosClient, NacosAsyncClient
-from use_nacos.endpoints import ConfigEndpoint, ConfigAsyncEndpoint, config as conf
-from use_nacos.exception import HTTPResponseError
-from use_nacos.serializer import JsonSerializer, AutoSerializer, YamlSerializer, TomlSerializer
+from nacos_py_client.cache import MemoryCache
+from nacos_py_client.client import NacosClient, NacosAsyncClient
+from nacos_py_client.endpoints import ConfigEndpoint, ConfigAsyncEndpoint, config as conf
+from nacos_py_client.exception import HTTPResponseError
+from nacos_py_client.serializer import JsonSerializer, AutoSerializer, YamlSerializer, TomlSerializer
 
 
 @pytest.fixture

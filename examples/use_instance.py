@@ -1,4 +1,4 @@
-from use_nacos import NacosClient
+from nacos_py_client import NacosClient
 
 nacos = NacosClient()
 

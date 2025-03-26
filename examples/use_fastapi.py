@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI
 
-from use_nacos import NacosAsyncClient
+from nacos_py_client import NacosAsyncClient
 
 
 def config_update(config):

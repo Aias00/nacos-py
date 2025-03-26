@@ -20,9 +20,9 @@ def _get_md5(content: Any):
     return hashlib.md5(string_content.encode('utf-8')).hexdigest() if content else ''
 
 
-def _get_config_key(data_id: str, group: str, tenant: str):
+def _get_config_key(data_id: str, group: str, namespaceId: str):
     # because `#` is illegal character in Nacos
-    return '#'.join([data_id, group, tenant])
+    return '#'.join([data_id, group, namespaceId])
 
 
 def _parse_config_key(key: str):
@@ -47,14 +47,15 @@ class _BaseConfigEndpoint(Endpoint):
             self,
             data_id: str,
             group: str,
-            tenant: Optional[str] = ''
+            namespaceId: Optional[str] = ''
     ) -> SyncAsync[Any]:
+        logger.info(f"get config: {data_id}, {group}, {namespaceId}")
         return self.client.request(
-            "/nacos/v1/cs/configs",
+            "/nacos/v2/cs/config",
             query={
                 "dataId": data_id,
                 "group": group,
-                "tenant": tenant,
+                "namespaceId": namespaceId,
             },
             serialized=False
         )
@@ -64,16 +65,17 @@ class _BaseConfigEndpoint(Endpoint):
             data_id: str,
             group: str,
             content: str,
-            tenant: Optional[str] = '',
+            namespaceId: Optional[str] = '',
             type: Optional[str] = None,
     ) -> SyncAsync[Any]:
+        logger.info(f"publish config: {data_id}, {group}, {content}, {namespaceId}, {type}")
         return self.client.request(
-            "/nacos/v1/cs/configs",
+            "/nacos/v2/cs/config",
             method="POST",
             body={
                 "dataId": data_id,
                 "group": group,
-                "tenant": tenant,
+                "namespaceId": namespaceId,
                 "content": content,
                 "type": type,
             }
@@ -83,15 +85,16 @@ class _BaseConfigEndpoint(Endpoint):
             self,
             data_id: str,
             group: str,
-            tenant: Optional[str] = '',
+            namespaceId: Optional[str] = '',
     ) -> SyncAsync[Any]:
+        logger.info(f"delete config: {data_id}, {group}, {namespaceId}")
         return self.client.request(
-            "/nacos/v1/cs/configs",
+            "/nacos/v2/cs/config",
             method="DELETE",
             query={
                 "dataId": data_id,
                 "group": group,
-                "tenant": tenant,
+                "namespaceId": namespaceId,
             }
         )
 
@@ -100,23 +103,25 @@ class _BaseConfigEndpoint(Endpoint):
             data_id: str,
             group: str,
             content_md5: Optional[str] = None,
-            tenant: Optional[str] = ''
+            namespaceId: Optional[str] = ''
     ) -> str:
-        return u'\x02'.join([data_id, group, content_md5 or "", tenant]) + u'\x01'
+        logger.info(f"format listening configs: {data_id}, {group}, {content_md5}, {namespaceId}")
+        return u'\x02'.join([data_id, group, content_md5 or "", namespaceId]) + u'\x01'
 
     def subscriber(
             self,
             data_id: str,
             group: str,
             content_md5: Optional[str] = None,
-            tenant: Optional[str] = '',
+            namespaceId: Optional[str] = '',
             timeout: Optional[int] = 30_000,
     ) -> SyncAsync[Any]:
+        logger.info(f"subscriber: {data_id}, {group}, {content_md5}, {namespaceId}, {timeout}")
         listening_configs = self._format_listening_configs(
-            data_id, group, content_md5, tenant
+            data_id, group, content_md5, namespaceId
         )
         return self.client.request(
-            "/nacos/v1/cs/configs/listener",
+            "/nacos/v2/cs/config/listener",
             method="POST",
             body={
                 "Listening-Configs": listening_configs
@@ -141,16 +146,16 @@ class ConfigOperationMixin:
             self,
             data_id: str,
             group: str,
-            tenant: Optional[str] = '',
+            namespaceId: Optional[str] = '',
             *,
             serializer: Optional[Union["Serializer", bool]] = None,
             cache: Optional[BaseCache] = None,
             default: Optional[str] = None
     ) -> SyncAsync[Any]:
         cache = cache or memory_cache
-        config_key = _get_config_key(data_id, group, tenant)
+        config_key = _get_config_key(data_id, group, namespaceId)
         try:
-            config = self._get(data_id, group, tenant)
+            config = self._get(data_id, group, namespaceId)
             # todo: this function need to be optimized
             cache.set(config_key, config)
             return _serialize_config(config, serializer)
@@ -167,14 +172,14 @@ class ConfigOperationMixin:
             self,
             data_id: str,
             group: str,
-            tenant: Optional[str] = '',
+            namespaceId: Optional[str] = '',
             timeout: Optional[int] = 30_000,
             serializer: Optional[Union["Serializer", bool]] = None,
             cache: Optional[BaseCache] = None,
             callback: Optional[Callable] = None
     ) -> SyncAsync[Any]:
         cache = cache or MemoryCache()
-        config_key = _get_config_key(data_id, group, tenant)
+        config_key = _get_config_key(data_id, group, namespaceId)
         last_md5 = _get_md5(cache.get(config_key) or '')
         stop_event = threading.Event()
         stop_event.cancel = stop_event.set
@@ -183,11 +188,11 @@ class ConfigOperationMixin:
             nonlocal last_md5
             while not stop_event.is_set():
                 try:
-                    response = self.subscriber(data_id, group, last_md5, tenant, timeout)
+                    response = self.subscriber(data_id, group, last_md5, namespaceId, timeout)
                     if not response:
                         continue
                     logging.info("Configuration update detected.")
-                    last_config = self._get(data_id, group, tenant)
+                    last_config = self._get(data_id, group, namespaceId)
                     last_md5 = _get_md5(last_config)
                     cache.set(config_key, last_config)
                     self._config_callback(callback, last_config, serializer)
@@ -217,16 +222,16 @@ class ConfigAsyncOperationMixin:
             self,
             data_id: str,
             group: str,
-            tenant: Optional[str] = '',
+            namespaceId: Optional[str] = '',
             *,
             serializer: Optional[Union["Serializer", bool]] = None,
             cache: Optional[BaseCache] = None,
             default: Optional[str] = None
     ) -> SyncAsync[Any]:
         cache = cache or memory_cache
-        config_key = _get_config_key(data_id, group, tenant)
+        config_key = _get_config_key(data_id, group, namespaceId)
         try:
-            config = await self._get(data_id, group, tenant)
+            config = await self._get(data_id, group, namespaceId)
             cache.set(config_key, config)
             return _serialize_config(config, serializer)
         except (httpx.ConnectError, httpx.TimeoutException) as exc:
@@ -242,14 +247,14 @@ class ConfigAsyncOperationMixin:
             self,
             data_id: str,
             group: str,
-            tenant: Optional[str] = '',
+            namespaceId: Optional[str] = '',
             timeout: Optional[int] = 30_000,
             serializer: Optional[Union["Serializer", bool]] = None,
             cache: Optional[BaseCache] = None,
             callback: Optional[Callable] = None,
     ) -> SyncAsync[Any]:
         cache = cache or MemoryCache()
-        config_key = _get_config_key(data_id, group, tenant)
+        config_key = _get_config_key(data_id, group, namespaceId)
         last_md5 = _get_md5(cache.get(config_key) or '')
         stop_event = threading.Event()
         stop_event.cancel = stop_event.set
@@ -259,12 +264,12 @@ class ConfigAsyncOperationMixin:
             while True:
                 try:
                     response = await self.subscriber(
-                        data_id, group, last_md5, tenant, timeout
+                        data_id, group, last_md5, namespaceId, timeout
                     )
                     if not response:
                         continue
                     logging.info("Configuration update detected.")
-                    last_config = await self._get(data_id, group, tenant)
+                    last_config = await self._get(data_id, group, namespaceId)
                     last_md5 = _get_md5(last_config)
                     cache.set(config_key, last_config)
                     await self._config_callback(callback, last_config, serializer)

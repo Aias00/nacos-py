@@ -1,0 +1,2 @@
+nacos-py-client==0.2.4
+yaml==6.0.1

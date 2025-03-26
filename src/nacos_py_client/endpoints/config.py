@@ -1,5 +1,6 @@
 import asyncio
 import hashlib
+import json
 import logging
 import threading
 from typing import Optional, Any, Callable, Union
@@ -156,6 +157,15 @@ class ConfigOperationMixin:
         config_key = _get_config_key(data_id, group, namespaceId)
         try:
             config = self._get(data_id, group, namespaceId)
+            if isinstance(config, str):
+                try:
+                    config_data = json.loads(config)
+                    if isinstance(config_data, dict) and 'data' in config_data:
+                        config = config_data['data']
+                except json.JSONDecodeError:
+                    # If not valid JSON, keep original config
+                    logger.error(f"Failed to parse config: {config}")
+                    pass
             # todo: this function need to be optimized
             cache.set(config_key, config)
             return _serialize_config(config, serializer)

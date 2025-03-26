@@ -1,9 +1,13 @@
 from nacos_py_client import NacosClient
 
-client = NacosClient()
+client = NacosClient(
+    server_addresses="http://172.16.21.45:11047",
+    username="nacos",
+    password="GFJ5l$*]B@+;jI'5"
+)
 
 # publish config
-client.config.publish("test_config", "DEFAULT_GROUP", "test_value")
+client.config.publish("test_config", "DEFAULT_GROUP", "test_value", "dcup")
 
 # get config
 assert client.config.get("test_config", "DEFAULT_GROUP") == "test_value"
